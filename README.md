@@ -34,7 +34,7 @@ data/Computer_Science/Sem1/Maths/2023/question_bank/sample.pdf
 
 1.Clone the repository
    ```bash
-   git clone [https://github.com/Vapatel57/ma.git](https://github.com/Vapatel57/academic.git)
+   git clone https://github.com/Vapatel57/academic.git
    cd material-management-app
    ```
 
