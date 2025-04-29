@@ -77,8 +77,4 @@ Feel free to use, modify, and distribute this project.
 
 Made with ❤️ by Vaidik Makasana
 
-✅ That's it!  
-You can **directly use** this in your GitHub repo.  
-You only need to replace **Vaidik Makasana** and your **GitHub link** where needed.
-
 ---
