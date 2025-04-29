@@ -50,6 +50,7 @@ def show_pdf(file_path):
         base64_pdf = base64.b64encode(f.read()).decode('utf-8')
     pdf_display = f'<iframe src="data:application/pdf;base64,{base64_pdf}" width="100%" height="800px" type="application/pdf"></iframe>'
     st.markdown(pdf_display, unsafe_allow_html=True)
+
 def preview_file(file):
     file_suffix = file.suffix.lower()
     if file_suffix == '.pdf':
@@ -68,7 +69,18 @@ def create_folder_structure(branch, semester, subject, year, data_path='data'):
     folder_path.mkdir(parents=True, exist_ok=True)
     return folder_path
 
-# -------------------- ADMIN PANEL --------------------
+def delete_folder(path):
+    if path.exists() and path.is_dir():
+        for child in path.iterdir():
+            if child.is_file():
+                child.unlink()
+            else:
+                delete_folder(child)
+        path.rmdir()
+        return True
+    return False
+
+# -------------------- ADMIN PANEL FUNCTIONS --------------------
 def admin_login():
     if "logged_in" not in st.session_state:
         st.session_state.logged_in = False
@@ -79,9 +91,9 @@ def admin_login():
         password = st.text_input("Password", "", type="password")
         
         if st.button("Login"):
-            if username == "admin" and password == "admin123":
+            if username == "vapatel_57" and password == "vaidik5757":
                 st.session_state.logged_in = True
-                st.success("Login successful! Welcome to the Admin Panel.")
+                st.success("Login successful! Welcome to the Admin Panel Mr Vaidik Patel.")
             else:
                 st.error("Invalid username or password. Please try again.")
     
@@ -98,19 +110,15 @@ def upload_file(branch, semester, subject, year, file_type, data_path='data'):
     folder = create_folder_structure(branch, semester, subject, year, data_path)
     uploaded_file = st.file_uploader("Upload your file", type=['pdf', 'jpg', 'jpeg', 'png', 'pptx'])
     if uploaded_file:
-        # Retain the original file name and extension
-        file_name = uploaded_file.name  # Use the original name of the file
-
-        # Save the uploaded file with the original name in the folder
+        file_name = uploaded_file.name
         with open(folder / file_name, "wb") as f:
             f.write(uploaded_file.getbuffer())
-        
         st.success(f"File '{file_name}' uploaded successfully!")
 
 def delete_file(branch, semester, subject, year, file_name, data_path='data'):
     file_path = Path(data_path) / branch / semester / subject / year / file_name
     if file_path.exists():
-        file_path.unlink()  # Delete the file
+        file_path.unlink()
         st.success(f"File '{file_name}' deleted successfully!")
     else:
         st.error(f"File '{file_name}' not found!")
@@ -119,13 +127,9 @@ def replace_file(branch, semester, subject, year, file_type, data_path='data'):
     folder = create_folder_structure(branch, semester, subject, year, data_path)
     uploaded_file = st.file_uploader("Upload the new file to replace the old one", type=['pdf', 'jpg', 'jpeg', 'png', 'pptx'])
     if uploaded_file:
-        # Retain the original file name and format when replacing
-        file_name = uploaded_file.name  # Use the original name of the file
-        
-        # Save the uploaded file with the same name as the old one
+        file_name = uploaded_file.name
         with open(folder / file_name, "wb") as f:
             f.write(uploaded_file.getbuffer())
-        
         st.success(f"File '{file_name}' replaced successfully!")
 
 def add_branch(data_path='data'):
@@ -163,88 +167,145 @@ if "logged_in" in st.session_state and st.session_state.logged_in:
     st.sidebar.checkbox("🛠️ Admin Panel", True)
 
     st.header("📂 Admin Panel - Manage Materials")
-    
-    st.subheader("➕ Add New Entries")
-    choice = st.selectbox("What do you want to add?", ["Branch", "Semester", "Subject", "Year", "Materials"])
 
-    if choice == "Branch":
-        add_branch()
-        admin_logout()
+    choice = st.selectbox("What do you want to do?", ["Add Branch/Semester/Subject/Year/Materials", "Delete Branch/Semester/Subject/Year"])
 
-    elif choice == "Semester":
-        branches = get_branches('data')
-        branch = st.selectbox("Select Branch", options=branches)
-        if branch:
-            add_semester(branch)
-        admin_logout()
+    if choice == "Add Branch/Semester/Subject/Year/Materials":
+        add_choice = st.selectbox("What do you want to add?", ["Branch", "Semester", "Subject", "Year", "Materials"])
 
-    elif choice == "Subject":
-        branches = get_branches('data')
-        branch = st.selectbox("Select Branch", options=branches)
-        if branch:
-            semesters = get_semesters(branch, 'data')
-            semester = st.selectbox("Select Semester", options=semesters)
-            if semester:
-                add_subject(branch, semester)
-        admin_logout()
+        if add_choice == "Branch":
+            add_branch()
+            admin_logout()
 
-    elif choice == "Year":
-        branches = get_branches('data')
-        branch = st.selectbox("Select Branch", options=branches)
-        if branch:
-            semesters = get_semesters(branch, 'data')
-            semester = st.selectbox("Select Semester", options=semesters)
-            if semester:
-                subjects = get_subjects(branch, semester, 'data')
-                subject = st.selectbox("Select Subject", options=subjects)
-                if subject:
-                    add_year(branch, semester, subject)
-        admin_logout()
+        elif add_choice == "Semester":
+            branches = get_branches('data')
+            branch = st.selectbox("Select Branch", options=branches)
+            if branch:
+                add_semester(branch)
+            admin_logout()
 
-    elif choice == "Materials":
-        branches = get_branches('data')
-        branch = st.selectbox("Select Branch", options=branches)
-        if branch:
-            semesters = get_semesters(branch, 'data')
-            semester = st.selectbox("Select Semester", options=semesters)
-            if semester:
-                subjects = get_subjects(branch, semester, 'data')
-                subject = st.selectbox("Select Subject", options=subjects)
-                if subject:
-                    years = get_years(branch, semester, subject, 'data')
-                    year = st.selectbox("Select Year", options=years)
-                    if year:
-                        file_type = st.selectbox(
-                            "Select File Type", 
-                            ["question_bank", "midsem_paper", "endsem_paper", "solutions", "short_notes"]
-                        )
-                        action = st.radio("Select Action", ["Upload New File", "Delete File", "Replace Existing File"])
+        elif add_choice == "Subject":
+            branches = get_branches('data')
+            branch = st.selectbox("Select Branch", options=branches)
+            if branch:
+                semesters = get_semesters(branch, 'data')
+                semester = st.selectbox("Select Semester", options=semesters)
+                if semester:
+                    add_subject(branch, semester)
+            admin_logout()
 
-                        if action == "Upload New File":
-                            upload_file(branch, semester, subject, year, file_type)
-                        elif action == "Delete File":
-                            files = list_materials(branch, semester, subject, year, 'data')
-                            file_to_delete = st.selectbox("Select File to Delete", options=[f.name for f in files])
-                            if file_to_delete and st.button(f"Delete {file_to_delete}"):
-                                delete_file(branch, semester, subject, year, file_to_delete, 'data')
-                        elif action == "Replace Existing File":
-                            files = list_materials(branch, semester, subject, year, 'data')
-                            file_to_replace = st.selectbox("Select File to Replace", options=[f.name for f in files])
-                            if file_to_replace:
-                                replace_file(branch, semester, subject, year, file_type)
+        elif add_choice == "Year":
+            branches = get_branches('data')
+            branch = st.selectbox("Select Branch", options=branches)
+            if branch:
+                semesters = get_semesters(branch, 'data')
+                semester = st.selectbox("Select Semester", options=semesters)
+                if semester:
+                    subjects = get_subjects(branch, semester, 'data')
+                    subject = st.selectbox("Select Subject", options=subjects)
+                    if subject:
+                        add_year(branch, semester, subject)
+            admin_logout()
+
+        elif add_choice == "Materials":
+            branches = get_branches('data')
+            branch = st.selectbox("Select Branch", options=branches)
+            if branch:
+                semesters = get_semesters(branch, 'data')
+                semester = st.selectbox("Select Semester", options=semesters)
+                if semester:
+                    subjects = get_subjects(branch, semester, 'data')
+                    subject = st.selectbox("Select Subject", options=subjects)
+                    if subject:
+                        years = get_years(branch, semester, subject, 'data')
+                        year = st.selectbox("Select Year", options=years)
+                        if year:
+                            file_type = st.selectbox("Select File Type", ["question_bank", "midsem_paper", "endsem_paper", "solutions", "short_notes"])
+                            action = st.radio("Select Action", ["Upload New File", "Delete File", "Replace Existing File"])
+
+                            if action == "Upload New File":
+                                upload_file(branch, semester, subject, year, file_type)
+                            elif action == "Delete File":
+                                files = list_materials(branch, semester, subject, year, 'data')
+                                file_to_delete = st.selectbox("Select File to Delete", options=[f.name for f in files])
+                                if file_to_delete and st.button(f"Delete {file_to_delete}"):
+                                    delete_file(branch, semester, subject, year, file_to_delete, 'data')
+                            elif action == "Replace Existing File":
+                                files = list_materials(branch, semester, subject, year, 'data')
+                                file_to_replace = st.selectbox("Select File to Replace", options=[f.name for f in files])
+                                if file_to_replace:
+                                    replace_file(branch, semester, subject, year, file_type)
+            admin_logout()
+
+    elif choice == "Delete Branch/Semester/Subject/Year":
+        delete_target = st.selectbox("What do you want to delete?", ["Branch", "Semester", "Subject", "Year"])
+
+        if delete_target == "Branch":
+            branches = get_branches('data')
+            branch = st.selectbox("Select Branch to Delete", options=branches)
+            if branch and st.button(f"Delete Branch '{branch}'"):
+                if delete_folder(Path('data') / branch):
+                    st.success(f"Branch '{branch}' deleted successfully!")
+                else:
+                    st.error("Failed to delete branch.")
+
+        elif delete_target == "Semester":
+            branches = get_branches('data')
+            branch = st.selectbox("Select Branch", options=branches)
+            if branch:
+                semesters = get_semesters(branch, 'data')
+                semester = st.selectbox("Select Semester to Delete", options=semesters)
+                if semester and st.button(f"Delete Semester '{semester}'"):
+                    if delete_folder(Path('data') / branch / semester):
+                        st.success(f"Semester '{semester}' deleted successfully!")
+                    else:
+                        st.error("Failed to delete semester.")
+
+        elif delete_target == "Subject":
+            branches = get_branches('data')
+            branch = st.selectbox("Select Branch", options=branches)
+            if branch:
+                semesters = get_semesters(branch, 'data')
+                semester = st.selectbox("Select Semester", options=semesters)
+                if semester:
+                    subjects = get_subjects(branch, semester, 'data')
+                    subject = st.selectbox("Select Subject to Delete", options=subjects)
+                    if subject and st.button(f"Delete Subject '{subject}'"):
+                        if delete_folder(Path('data') / branch / semester / subject):
+                            st.success(f"Subject '{subject}' deleted successfully!")
+                        else:
+                            st.error("Failed to delete subject.")
+
+        elif delete_target == "Year":
+            branches = get_branches('data')
+            branch = st.selectbox("Select Branch", options=branches)
+            if branch:
+                semesters = get_semesters(branch, 'data')
+                semester = st.selectbox("Select Semester", options=semesters)
+                if semester:
+                    subjects = get_subjects(branch, semester, 'data')
+                    subject = st.selectbox("Select Subject", options=subjects)
+                    if subject:
+                        years = get_years(branch, semester, subject, 'data')
+                        year = st.selectbox("Select Year to Delete", options=years)
+                        if year and st.button(f"Delete Year '{year}'"):
+                            if delete_folder(Path('data') / branch / semester / subject / year):
+                                st.success(f"Year '{year}' deleted successfully!")
+                            else:
+                                st.error("Failed to delete year.")
         admin_logout()
 
 else:
     # -------------------- STUDENT VIEW --------------------
     st.header("📚 Materials for Students")
-    
+
     branches = get_branches('data')
     branch = st.selectbox("Select Your Branch", options=branches)
 
     if branch:
         semesters = get_semesters(branch, 'data')
         semester = st.selectbox("Select Your Semester", options=semesters)
-        
+
         if semester:
             subjects = get_subjects(branch, semester, 'data')
             subject = st.selectbox("Select Subject", options=subjects)
@@ -258,7 +319,7 @@ else:
 
                     files = list_materials(branch, semester, subject, year, 'data')
 
-                if files:
+                    if files:
                         for file in files:
                             material_type = get_display_name(file.name)
                             col1, col2 = st.columns([7, 3])
@@ -271,9 +332,9 @@ else:
                                         label="📥 Download",
                                         data=file_data,
                                         file_name=file.name,
-                                        mime="application/pdf", 
+                                        mime="application/pdf",
                                         key=file.name
                                     )
                             preview_file(file)
-                else:
-                    st.warning("⚠️ No materials found for selected combination!")
+                    else:
+                        st.warning("⚠️ No materials found for selected combination!")
