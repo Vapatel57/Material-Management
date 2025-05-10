@@ -34,7 +34,7 @@ data/Computer_Science/Sem1/Maths/2023/question_bank/sample.pdf
 
 1.Clone the repository
    ```bash
-   git clone https://github.com/Vapatel57/academic.git
+   git clone https://github.com/Vapatel57/Material-Management.git
    cd material-management-app
    ```
 
@@ -64,13 +64,6 @@ streamlit
 - User role management (Admin, Student access)
 - Upload activity history logs
 - More stylish UI design
-
----
-
-📜 License
-
-MIT License.  
-Feel free to use, modify, and distribute this project.
 
 ---
 🙌 Author
